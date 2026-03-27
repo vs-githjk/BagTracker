@@ -1,0 +1,15 @@
+# Python
+backend/.venv/
+backend/__pycache__/
+backend/data/model.pkl
+**/*.pyc
+**/__pycache__/
+
+# Next.js
+frontend/.next/
+frontend/node_modules/
+frontend/.git/
+
+# Misc
+.DS_Store
+*.env.local
