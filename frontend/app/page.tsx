@@ -1,0 +1,293 @@
+"use client";
+
+import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
+import { Search, RefreshCw, Download, Upload, AlertTriangle, CheckCircle, Clock } from "lucide-react";
+import { fetchBags, refreshData } from "@/lib/api";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import { Bag } from "@/lib/types";
+import { formatTime } from "@/lib/utils";
+import RiskBadge from "@/components/RiskBadge";
+import RiskScoreBar from "@/components/RiskScoreBar";
+import StatusChip from "@/components/StatusChip";
+
+const SORT_FIELDS = [
+  { value: "risk_score", label: "Risk Score" },
+  { value: "layover_minutes", label: "Layover" },
+  { value: "arrival_delay_minutes", label: "Delay" },
+  { value: "scheduled_departure", label: "Departure" },
+];
+
+export default function DashboardPage() {
+  const [bags, setBags] = useState<Bag[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [search, setSearch] = useState("");
+  const [riskFilter, setRiskFilter] = useState("");
+  const [sortBy, setSortBy] = useState("risk_score");
+  const [sortDir, setSortDir] = useState("desc");
+  const [refreshing, setRefreshing] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadMsg, setUploadMsg] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await fetchBags({
+        search: search || undefined,
+        risk_level: riskFilter || undefined,
+        sort_by: sortBy,
+        sort_dir: sortDir,
+      });
+      setBags(data.bags);
+      setTotal(data.total);
+    } catch {
+      setError("Failed to load bags. Is the backend running on port 8000?");
+    } finally {
+      setLoading(false);
+    }
+  }, [search, riskFilter, sortBy, sortDir]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  // Live update every 8 seconds
+  useEffect(() => {
+    const interval = setInterval(() => load(), 8000);
+    return () => clearInterval(interval);
+  }, [load]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refreshData();
+      await load();
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setUploadMsg(null);
+    const form = new FormData();
+    form.append("file", file);
+    try {
+      const res = await fetch(`${API_BASE}/upload`, { method: "POST", body: form });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Upload failed");
+      setUploadMsg(`✓ ${data.rows_loaded} bags loaded. ${data.message}`);
+      await load();
+    } catch (err: unknown) {
+      setUploadMsg(`✗ ${err instanceof Error ? err.message : "Upload failed"}`);
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  const downloadCSV = () => {
+    if (!bags.length) return;
+    const cols = Object.keys(bags[0]) as (keyof Bag)[];
+    const rows = bags.map((b) => cols.map((c) => JSON.stringify(b[c] ?? "")).join(","));
+    const csv = [cols.join(","), ...rows].join("\n");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    a.download = "bagtrack_export.csv";
+    a.click();
+  };
+
+  const high = bags.filter((b) => b.risk_level === "High").length;
+  const med = bags.filter((b) => b.risk_level === "Medium").length;
+  const low = bags.filter((b) => b.risk_level === "Low").length;
+
+  return (
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-white">Transfer Bag Monitor</h1>
+          <p className="text-sm text-slate-400 mt-0.5">Live risk assessment for connecting bags</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={downloadCSV}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 transition-colors"
+          >
+            <Download className="w-3.5 h-3.5" /> Export CSV
+          </button>
+          <label className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border border-slate-700 transition-colors cursor-pointer ${uploading ? "bg-slate-700 text-slate-500" : "bg-slate-800 hover:bg-slate-700 text-slate-300"}`}>
+            <Upload className="w-3.5 h-3.5" />
+            {uploading ? "Uploading..." : "Upload CSV"}
+            <input type="file" accept=".csv" className="hidden" onChange={handleUpload} disabled={uploading} />
+          </label>
+          <a
+            href={`${API_BASE}/upload/template`}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 transition-colors"
+          >
+            Template
+          </a>
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-blue-700 hover:bg-blue-600 text-white rounded-lg transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
+            {refreshing ? "Regenerating..." : "New Dataset"}
+          </button>
+        </div>
+      </div>
+
+      {uploadMsg && (
+        <div className={`px-4 py-2.5 rounded-lg text-sm border ${uploadMsg.startsWith("✓") ? "bg-emerald-950 border-emerald-800 text-emerald-300" : "bg-red-950 border-red-800 text-red-300"}`}>
+          {uploadMsg}
+        </div>
+      )}
+
+      {/* Summary cards */}
+      <div className="grid grid-cols-4 gap-4">
+        {[
+          { label: "Total Bags", value: total, icon: Clock, colorClass: "text-slate-400", bgClass: "bg-slate-800 border-slate-700" },
+          { label: "High Risk", value: high, icon: AlertTriangle, colorClass: "text-red-400", bgClass: "bg-red-950/50 border-red-900" },
+          { label: "Medium Risk", value: med, icon: AlertTriangle, colorClass: "text-yellow-400", bgClass: "bg-yellow-950/50 border-yellow-900" },
+          { label: "Low Risk", value: low, icon: CheckCircle, colorClass: "text-emerald-400", bgClass: "bg-emerald-950/50 border-emerald-900" },
+        ].map(({ label, value, icon: Icon, colorClass, bgClass }) => (
+          <div key={label} className={`rounded-xl border p-4 ${bgClass}`}>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-slate-500 uppercase tracking-wide">{label}</span>
+              <Icon className={`w-4 h-4 ${colorClass}`} />
+            </div>
+            <div className={`text-3xl font-bold mt-2 ${colorClass}`}>{loading ? "—" : value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Filters */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="relative flex-1 min-w-48">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+          <input
+            type="text"
+            placeholder="Search bag ID, flight, passenger..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 text-sm bg-slate-800 border border-slate-700 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+          />
+        </div>
+        <select
+          value={riskFilter}
+          onChange={(e) => setRiskFilter(e.target.value)}
+          className="px-3 py-2 text-sm bg-slate-800 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:border-blue-500"
+        >
+          <option value="">All Risk Levels</option>
+          <option value="High">High</option>
+          <option value="Medium">Medium</option>
+          <option value="Low">Low</option>
+        </select>
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          className="px-3 py-2 text-sm bg-slate-800 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:border-blue-500"
+        >
+          {SORT_FIELDS.map((f) => (
+            <option key={f.value} value={f.value}>{`Sort: ${f.label}`}</option>
+          ))}
+        </select>
+        <button
+          onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
+          className="px-3 py-2 text-sm bg-slate-800 border border-slate-700 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors"
+        >
+          {sortDir === "desc" ? "↓ Desc" : "↑ Asc"}
+        </button>
+      </div>
+
+      {error && (
+        <div className="p-4 bg-red-950 border border-red-800 rounded-lg text-red-300 text-sm">
+          {error}
+        </div>
+      )}
+
+      {/* Table */}
+      <div className="rounded-xl border border-slate-800 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-slate-900 border-b border-slate-800">
+                {["Bag ID","Inbound","Outbound","Arrival","Departure","Layover","Status","Risk Score","Risk Level","Top Reasons","Action"].map((h) => (
+                  <th key={h} className="px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                Array.from({ length: 8 }).map((_, i) => (
+                  <tr key={i} className="border-b border-slate-800/50">
+                    {Array.from({ length: 11 }).map((_, j) => (
+                      <td key={j} className="px-3 py-3">
+                        <div className="h-4 bg-slate-800 rounded animate-pulse" />
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : bags.length === 0 ? (
+                <tr>
+                  <td colSpan={11} className="px-3 py-12 text-center text-slate-500">No bags found</td>
+                </tr>
+              ) : (
+                bags.map((bag) => (
+                  <tr key={bag.bag_id} className="border-b border-slate-800/50 hover:bg-slate-800/40 transition-colors">
+                    <td className="px-3 py-3 font-mono text-xs">
+                      <Link href={`/bags/${bag.bag_id}`} className="text-blue-400 hover:text-blue-300 hover:underline">
+                        {bag.bag_id}
+                      </Link>
+                    </td>
+                    <td className="px-3 py-3 font-mono text-xs text-slate-300">{bag.inbound_flight}</td>
+                    <td className="px-3 py-3 font-mono text-xs text-slate-300">{bag.outbound_flight}</td>
+                    <td className="px-3 py-3 text-xs text-slate-400 whitespace-nowrap">
+                      {formatTime(bag.actual_arrival)}
+                      {bag.arrival_delay_minutes > 10 && (
+                        <span className="ml-1 text-orange-400">+{bag.arrival_delay_minutes}m</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-3 text-xs text-slate-400 whitespace-nowrap">{formatTime(bag.scheduled_departure)}</td>
+                    <td className="px-3 py-3 text-xs">
+                      <span className={bag.layover_minutes < 45 ? "text-orange-400 font-semibold" : "text-slate-300"}>
+                        {bag.layover_minutes}m
+                      </span>
+                    </td>
+                    <td className="px-3 py-3"><StatusChip status={bag.current_status} /></td>
+                    <td className="px-3 py-3"><RiskScoreBar score={bag.risk_score} /></td>
+                    <td className="px-3 py-3"><RiskBadge level={bag.risk_level} /></td>
+                    <td className="px-3 py-3 max-w-48">
+                      <div className="space-y-0.5">
+                        {(bag.risk_reasons || []).slice(0, 2).map((r, i) => (
+                          <div key={i} className="text-xs text-slate-400 truncate">• {r}</div>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-3 py-3 max-w-44">
+                      <div className="text-xs text-slate-300 leading-snug line-clamp-2">{bag.recommended_action}</div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <p className="text-xs text-slate-600">
+        Showing {bags.length} of {total} bags · Auto-refreshes every 8 seconds
+      </p>
+    </div>
+  );
+}
