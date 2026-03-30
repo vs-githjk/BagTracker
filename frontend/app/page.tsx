@@ -181,10 +181,10 @@ export default function DashboardPage() {
       {/* Summary cards */}
       <div className="grid grid-cols-4 gap-4">
         {[
-          { label: "Total Bags", value: total, icon: Clock, colorClass: "text-slate-500 dark:text-slate-400", bgClass: "bg-white border-slate-200 dark:bg-slate-800 dark:border-slate-700" },
-          { label: "High Risk", value: high, icon: AlertTriangle, colorClass: "text-red-500 dark:text-red-400", bgClass: "bg-red-50 border-red-200 dark:bg-red-950/50 dark:border-red-900" },
-          { label: "Medium Risk", value: med, icon: AlertTriangle, colorClass: "text-yellow-500 dark:text-yellow-400", bgClass: "bg-yellow-50 border-yellow-200 dark:bg-yellow-950/50 dark:border-yellow-900" },
-          { label: "Low Risk", value: low, icon: CheckCircle, colorClass: "text-emerald-500 dark:text-emerald-400", bgClass: "bg-emerald-50 border-emerald-200 dark:bg-emerald-950/50 dark:border-emerald-900" },
+          { label: "Total Bags", value: total, icon: Clock, colorClass: "text-slate-500 dark:text-slate-400", bgClass: "bg-white border-slate-200 shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:shadow-none" },
+          { label: "High Risk", value: high, icon: AlertTriangle, colorClass: "text-red-500 dark:text-red-400", bgClass: "bg-red-50 border-red-200 shadow-sm dark:bg-red-950/50 dark:border-red-900 dark:shadow-none" },
+          { label: "Medium Risk", value: med, icon: AlertTriangle, colorClass: "text-yellow-500 dark:text-yellow-400", bgClass: "bg-yellow-50 border-yellow-200 shadow-sm dark:bg-yellow-950/50 dark:border-yellow-900 dark:shadow-none" },
+          { label: "Low Risk", value: low, icon: CheckCircle, colorClass: "text-emerald-500 dark:text-emerald-400", bgClass: "bg-emerald-50 border-emerald-200 shadow-sm dark:bg-emerald-950/50 dark:border-emerald-900 dark:shadow-none" },
         ].map(({ label, value, icon: Icon, colorClass, bgClass }) => (
           <div key={label} className={`rounded-xl border p-4 ${bgClass}`}>
             <div className="flex items-center justify-between">
@@ -242,7 +242,7 @@ export default function DashboardPage() {
       )}
 
       {/* Table */}
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+      <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm dark:shadow-none">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
