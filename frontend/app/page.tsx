@@ -33,7 +33,7 @@ export default function DashboardPage() {
   const [uploading, setUploading] = useState(false);
   const [uploadMsg, setUploadMsg] = useState<string | null>(null);
 
-  type Popover = { key: string; lines: string[]; x: number; y: number };
+  type Popover = { key: string; lines: string[]; x: number; y: number; anchor: "left" | "right" };
   const [popover, setPopover] = useState<Popover | null>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
 
@@ -41,9 +41,13 @@ export default function DashboardPage() {
     e.stopPropagation();
     if (popover?.key === key) { setPopover(null); return; }
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const popoverWidth = 288; // max-w-xs = 320px, use 288 as safe estimate
-    const x = Math.min(rect.left, window.innerWidth - popoverWidth - 12);
-    setPopover({ key, lines, x, y: rect.bottom + 6 });
+    const popoverWidth = 288;
+    const spaceRight = window.innerWidth - rect.left;
+    if (spaceRight < popoverWidth + 12) {
+      setPopover({ key, lines, x: window.innerWidth - rect.right, y: rect.bottom + 6, anchor: "right" });
+    } else {
+      setPopover({ key, lines, x: rect.left, y: rect.bottom + 6, anchor: "left" });
+    }
   };
 
   useEffect(() => {
@@ -332,7 +336,7 @@ export default function DashboardPage() {
       {popover && (
         <div
           ref={popoverRef}
-          style={{ position: "fixed", top: popover.y, left: popover.x, zIndex: 50 }}
+          style={{ position: "fixed", top: popover.y, ...(popover.anchor === "right" ? { right: popover.x } : { left: popover.x }), zIndex: 50 }}
           className="bg-slate-800 border border-slate-600 rounded-lg shadow-xl p-3 max-w-xs w-max"
         >
           <ul className="space-y-1.5">
