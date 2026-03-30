@@ -140,31 +140,31 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-white">Transfer Bag Monitor</h1>
-          <p className="text-sm text-slate-400 mt-0.5">Live risk assessment for connecting bags</p>
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white">Transfer Bag Monitor</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Live risk assessment for connecting bags</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={downloadCSV}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-white hover:bg-slate-50 text-slate-600 rounded-lg border border-slate-200 transition-colors dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-700"
           >
             <Download className="w-3.5 h-3.5" /> Export CSV
           </button>
-          <label className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border border-slate-700 transition-colors cursor-pointer ${uploading ? "bg-slate-700 text-slate-500" : "bg-slate-800 hover:bg-slate-700 text-slate-300"}`}>
+          <label className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border transition-colors cursor-pointer ${uploading ? "bg-slate-100 text-slate-400 border-slate-200 dark:bg-slate-700 dark:text-slate-500 dark:border-slate-700" : "bg-white hover:bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-700"}`}>
             <Upload className="w-3.5 h-3.5" />
             {uploading ? "Uploading..." : "Upload CSV"}
             <input type="file" accept=".csv" className="hidden" onChange={handleUpload} disabled={uploading} />
           </label>
           <a
             href={`${API_BASE}/upload/template`}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-white hover:bg-slate-50 text-slate-600 rounded-lg border border-slate-200 transition-colors dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-700"
           >
             Template
           </a>
           <button
             onClick={handleRefresh}
             disabled={refreshing}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-blue-700 hover:bg-blue-600 text-white rounded-lg transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
             {refreshing ? "Regenerating..." : "New Dataset"}
@@ -173,7 +173,7 @@ export default function DashboardPage() {
       </div>
 
       {uploadMsg && (
-        <div className={`px-4 py-2.5 rounded-lg text-sm border ${uploadMsg.startsWith("✓") ? "bg-emerald-950 border-emerald-800 text-emerald-300" : "bg-red-950 border-red-800 text-red-300"}`}>
+        <div className={`px-4 py-2.5 rounded-lg text-sm border ${uploadMsg.startsWith("✓") ? "bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950 dark:border-emerald-800 dark:text-emerald-300" : "bg-red-50 border-red-200 text-red-700 dark:bg-red-950 dark:border-red-800 dark:text-red-300"}`}>
           {uploadMsg}
         </div>
       )}
@@ -181,14 +181,14 @@ export default function DashboardPage() {
       {/* Summary cards */}
       <div className="grid grid-cols-4 gap-4">
         {[
-          { label: "Total Bags", value: total, icon: Clock, colorClass: "text-slate-400", bgClass: "bg-slate-800 border-slate-700" },
-          { label: "High Risk", value: high, icon: AlertTriangle, colorClass: "text-red-400", bgClass: "bg-red-950/50 border-red-900" },
-          { label: "Medium Risk", value: med, icon: AlertTriangle, colorClass: "text-yellow-400", bgClass: "bg-yellow-950/50 border-yellow-900" },
-          { label: "Low Risk", value: low, icon: CheckCircle, colorClass: "text-emerald-400", bgClass: "bg-emerald-950/50 border-emerald-900" },
+          { label: "Total Bags", value: total, icon: Clock, colorClass: "text-slate-500 dark:text-slate-400", bgClass: "bg-white border-slate-200 dark:bg-slate-800 dark:border-slate-700" },
+          { label: "High Risk", value: high, icon: AlertTriangle, colorClass: "text-red-500 dark:text-red-400", bgClass: "bg-red-50 border-red-200 dark:bg-red-950/50 dark:border-red-900" },
+          { label: "Medium Risk", value: med, icon: AlertTriangle, colorClass: "text-yellow-500 dark:text-yellow-400", bgClass: "bg-yellow-50 border-yellow-200 dark:bg-yellow-950/50 dark:border-yellow-900" },
+          { label: "Low Risk", value: low, icon: CheckCircle, colorClass: "text-emerald-500 dark:text-emerald-400", bgClass: "bg-emerald-50 border-emerald-200 dark:bg-emerald-950/50 dark:border-emerald-900" },
         ].map(({ label, value, icon: Icon, colorClass, bgClass }) => (
           <div key={label} className={`rounded-xl border p-4 ${bgClass}`}>
             <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-500 uppercase tracking-wide">{label}</span>
+              <span className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide">{label}</span>
               <Icon className={`w-4 h-4 ${colorClass}`} />
             </div>
             <div className={`text-3xl font-bold mt-2 ${colorClass}`}>{loading ? "—" : value}</div>
@@ -199,19 +199,19 @@ export default function DashboardPage() {
       {/* Filters */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="relative flex-1 min-w-48">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
           <input
             type="text"
             placeholder="Search bag ID, flight, passenger..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-sm bg-slate-800 border border-slate-700 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+            className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 dark:placeholder-slate-500"
           />
         </div>
         <select
           value={riskFilter}
           onChange={(e) => setRiskFilter(e.target.value)}
-          className="px-3 py-2 text-sm bg-slate-800 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:border-blue-500"
+          className="px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:border-blue-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200"
         >
           <option value="">All Risk Levels</option>
           <option value="High">High</option>
@@ -221,7 +221,7 @@ export default function DashboardPage() {
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value)}
-          className="px-3 py-2 text-sm bg-slate-800 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:border-blue-500"
+          className="px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:border-blue-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200"
         >
           {SORT_FIELDS.map((f) => (
             <option key={f.value} value={f.value}>{`Sort: ${f.label}`}</option>
@@ -229,26 +229,26 @@ export default function DashboardPage() {
         </select>
         <button
           onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
-          className="px-3 py-2 text-sm bg-slate-800 border border-slate-700 rounded-lg text-slate-200 hover:bg-slate-700 transition-colors"
+          className="px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700"
         >
           {sortDir === "desc" ? "↓ Desc" : "↑ Asc"}
         </button>
       </div>
 
       {error && (
-        <div className="p-4 bg-red-950 border border-red-800 rounded-lg text-red-300 text-sm">
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm dark:bg-red-950 dark:border-red-800 dark:text-red-300">
           {error}
         </div>
       )}
 
       {/* Table */}
-      <div className="rounded-xl border border-slate-800 overflow-hidden">
+      <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-slate-900 border-b border-slate-800">
+              <tr className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
                 {["Bag ID","Inbound","Outbound","Arrival","Departure","Layover","Status","Risk Score","Risk Level","Top Reasons","Action"].map((h) => (
-                  <th key={h} className="px-3 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">
+                  <th key={h} className="px-3 py-3 text-left text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide whitespace-nowrap">
                     {h}
                   </th>
                 ))}
@@ -257,37 +257,37 @@ export default function DashboardPage() {
             <tbody>
               {loading ? (
                 Array.from({ length: 8 }).map((_, i) => (
-                  <tr key={i} className="border-b border-slate-800/50">
+                  <tr key={i} className="border-b border-slate-100 dark:border-slate-800/50">
                     {Array.from({ length: 11 }).map((_, j) => (
                       <td key={j} className="px-3 py-3">
-                        <div className="h-4 bg-slate-800 rounded animate-pulse" />
+                        <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />
                       </td>
                     ))}
                   </tr>
                 ))
               ) : bags.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="px-3 py-12 text-center text-slate-500">No bags found</td>
+                  <td colSpan={11} className="px-3 py-12 text-center text-slate-400 dark:text-slate-500">No bags found</td>
                 </tr>
               ) : (
                 bags.map((bag) => (
-                  <tr key={bag.bag_id} className="border-b border-slate-800/50 hover:bg-slate-800/40 transition-colors">
+                  <tr key={bag.bag_id} className="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
                     <td className="px-3 py-3 font-mono text-xs">
-                      <Link href={`/bags/${bag.bag_id}`} className="text-blue-400 hover:text-blue-300 hover:underline">
+                      <Link href={`/bags/${bag.bag_id}`} className="text-blue-600 hover:text-blue-500 hover:underline dark:text-blue-400 dark:hover:text-blue-300">
                         {bag.bag_id}
                       </Link>
                     </td>
-                    <td className="px-3 py-3 font-mono text-xs text-slate-300">{bag.inbound_flight}</td>
-                    <td className="px-3 py-3 font-mono text-xs text-slate-300">{bag.outbound_flight}</td>
-                    <td className="px-3 py-3 text-xs text-slate-400 whitespace-nowrap">
+                    <td className="px-3 py-3 font-mono text-xs text-slate-600 dark:text-slate-300">{bag.inbound_flight}</td>
+                    <td className="px-3 py-3 font-mono text-xs text-slate-600 dark:text-slate-300">{bag.outbound_flight}</td>
+                    <td className="px-3 py-3 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
                       {formatTime(bag.actual_arrival)}
                       {bag.arrival_delay_minutes > 10 && (
-                        <span className="ml-1 text-orange-400">+{bag.arrival_delay_minutes}m</span>
+                        <span className="ml-1 text-orange-500 dark:text-orange-400">+{bag.arrival_delay_minutes}m</span>
                       )}
                     </td>
-                    <td className="px-3 py-3 text-xs text-slate-400 whitespace-nowrap">{formatTime(bag.scheduled_departure)}</td>
+                    <td className="px-3 py-3 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">{formatTime(bag.scheduled_departure)}</td>
                     <td className="px-3 py-3 text-xs">
-                      <span className={bag.layover_minutes < 45 ? "text-orange-400 font-semibold" : "text-slate-300"}>
+                      <span className={bag.layover_minutes < 45 ? "text-orange-500 dark:text-orange-400 font-semibold" : "text-slate-600 dark:text-slate-300"}>
                         {bag.layover_minutes}m
                       </span>
                     </td>
@@ -298,27 +298,27 @@ export default function DashboardPage() {
                       {(bag.risk_reasons || []).length > 0 ? (
                         <button
                           onClick={(e) => openPopover(e, `${bag.bag_id}-reasons`, bag.risk_reasons || [])}
-                          className={`flex items-center gap-1 text-xs px-2 py-1 rounded border transition-colors ${popover?.key === `${bag.bag_id}-reasons` ? "bg-slate-700 border-slate-500 text-slate-200" : "bg-slate-800/60 border-slate-700 text-slate-400 hover:border-slate-500 hover:text-slate-300"}`}
+                          className={`flex items-center gap-1 text-xs px-2 py-1 rounded border transition-colors ${popover?.key === `${bag.bag_id}-reasons` ? "bg-slate-200 border-slate-400 text-slate-800 dark:bg-slate-700 dark:border-slate-500 dark:text-slate-200" : "bg-slate-100 border-slate-200 text-slate-500 hover:border-slate-400 hover:text-slate-700 dark:bg-slate-800/60 dark:border-slate-700 dark:text-slate-400 dark:hover:border-slate-500 dark:hover:text-slate-300"}`}
                         >
                           <span className="truncate max-w-32">{(bag.risk_reasons || [])[0]}</span>
-                          {(bag.risk_reasons || []).length > 1 && <span className="shrink-0 text-slate-500">+{(bag.risk_reasons || []).length - 1}</span>}
+                          {(bag.risk_reasons || []).length > 1 && <span className="shrink-0 text-slate-400 dark:text-slate-500">+{(bag.risk_reasons || []).length - 1}</span>}
                           <ChevronDown className={`w-3 h-3 shrink-0 transition-transform ${popover?.key === `${bag.bag_id}-reasons` ? "rotate-180" : ""}`} />
                         </button>
                       ) : (
-                        <span className="text-xs text-slate-600">—</span>
+                        <span className="text-xs text-slate-300 dark:text-slate-600">—</span>
                       )}
                     </td>
                     <td className="px-3 py-3">
                       {bag.recommended_action ? (
                         <button
                           onClick={(e) => openPopover(e, `${bag.bag_id}-action`, [bag.recommended_action])}
-                          className={`flex items-center gap-1 text-xs px-2 py-1 rounded border transition-colors ${popover?.key === `${bag.bag_id}-action` ? "bg-slate-700 border-slate-500 text-slate-200" : "bg-slate-800/60 border-slate-700 text-slate-400 hover:border-slate-500 hover:text-slate-300"}`}
+                          className={`flex items-center gap-1 text-xs px-2 py-1 rounded border transition-colors ${popover?.key === `${bag.bag_id}-action` ? "bg-slate-200 border-slate-400 text-slate-800 dark:bg-slate-700 dark:border-slate-500 dark:text-slate-200" : "bg-slate-100 border-slate-200 text-slate-500 hover:border-slate-400 hover:text-slate-700 dark:bg-slate-800/60 dark:border-slate-700 dark:text-slate-400 dark:hover:border-slate-500 dark:hover:text-slate-300"}`}
                         >
                           <span className="truncate max-w-32">{bag.recommended_action}</span>
                           <ChevronDown className={`w-3 h-3 shrink-0 transition-transform ${popover?.key === `${bag.bag_id}-action` ? "rotate-180" : ""}`} />
                         </button>
                       ) : (
-                        <span className="text-xs text-slate-600">—</span>
+                        <span className="text-xs text-slate-300 dark:text-slate-600">—</span>
                       )}
                     </td>
                   </tr>
@@ -329,7 +329,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <p className="text-xs text-slate-600">
+      <p className="text-xs text-slate-400 dark:text-slate-600">
         Showing {bags.length} of {total} bags · Auto-refreshes every 8 seconds
       </p>
 
@@ -337,12 +337,12 @@ export default function DashboardPage() {
         <div
           ref={popoverRef}
           style={{ position: "fixed", top: popover.y, ...(popover.anchor === "right" ? { right: popover.x } : { left: popover.x }), zIndex: 50 }}
-          className="bg-slate-800 border border-slate-600 rounded-lg shadow-xl p-3 max-w-xs w-max"
+          className="bg-white border border-slate-200 rounded-lg shadow-xl p-3 max-w-xs w-max dark:bg-slate-800 dark:border-slate-600"
         >
           <ul className="space-y-1.5">
             {popover.lines.map((line, i) => (
-              <li key={i} className="flex gap-2 text-xs text-slate-200 leading-snug">
-                <span className="text-slate-500 shrink-0">•</span>
+              <li key={i} className="flex gap-2 text-xs text-slate-700 dark:text-slate-200 leading-snug">
+                <span className="text-slate-400 dark:text-slate-500 shrink-0">•</span>
                 <span>{line}</span>
               </li>
             ))}
