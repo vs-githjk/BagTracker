@@ -53,6 +53,19 @@ export interface TimelineEvent {
   status: "completed" | "in_progress" | "pending";
 }
 
+export interface RiskDriverFrequency {
+  label: string;
+  count: number;
+  pct_all: number;
+  pct_high: number;
+}
+
+export interface OperationalInsight {
+  severity: "high" | "medium" | "low";
+  metric: string;
+  recommendation: string;
+}
+
 export interface Analytics {
   total_bags: number;
   high_risk: number;
@@ -63,6 +76,8 @@ export interface Analytics {
   actual_missed_bags: number;
   risk_distribution: { range: string; count: number }[];
   feature_importances: { feature: string; importance: number }[];
+  risk_driver_frequency: RiskDriverFrequency[];
+  operational_insights: OperationalInsight[];
 }
 
 export interface PassengerStatus {

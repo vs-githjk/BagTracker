@@ -8,6 +8,7 @@ import {
 import { fetchAnalytics } from "@/lib/api";
 import { Analytics } from "@/lib/types";
 import { featureLabel } from "@/lib/utils";
+import { AlertTriangle, AlertCircle, Info } from "lucide-react";
 
 const PIE_COLORS = ["#ef4444", "#f59e0b", "#10b981"];
 
@@ -139,6 +140,73 @@ export default function AnalyticsPage() {
           ))}
         </div>
       </div>
+
+      {/* Risk Driver Frequency */}
+      {data.risk_driver_frequency?.length > 0 && (
+        <div className="bg-white border border-slate-200 rounded-xl p-5 dark:bg-slate-900 dark:border-slate-800">
+          <h2 className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-1">Top Risk Drivers</h2>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">How often each factor appears — across all bags vs. high-risk bags only</p>
+          <div className="space-y-3">
+            {data.risk_driver_frequency.map(({ label, pct_all, pct_high }) => (
+              <div key={label} className="space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span className="text-slate-600 dark:text-slate-300">{label}</span>
+                  <div className="flex gap-3 shrink-0 ml-2">
+                    <span className="text-slate-400 dark:text-slate-500">{pct_all}% all</span>
+                    <span className="text-red-500 dark:text-red-400 font-medium">{pct_high}% high-risk</span>
+                  </div>
+                </div>
+                <div className="relative h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                  <div className="absolute h-full bg-slate-300 dark:bg-slate-600 rounded-full" style={{ width: `${pct_all}%` }} />
+                  <div className="absolute h-full bg-red-400 dark:bg-red-500 rounded-full opacity-80" style={{ width: `${pct_high}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center gap-4 mt-4 text-xs text-slate-400 dark:text-slate-500">
+            <span className="flex items-center gap-1.5"><span className="w-3 h-2 rounded bg-slate-300 dark:bg-slate-600 inline-block" /> All bags</span>
+            <span className="flex items-center gap-1.5"><span className="w-3 h-2 rounded bg-red-400 dark:bg-red-500 inline-block opacity-80" /> High-risk bags</span>
+          </div>
+        </div>
+      )}
+
+      {/* Operational Insights */}
+      {data.operational_insights?.length > 0 && (
+        <div className="bg-white border border-slate-200 rounded-xl p-5 dark:bg-slate-900 dark:border-slate-800">
+          <h2 className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-1">Operational Insights</h2>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">Data-driven recommendations based on current bag patterns</p>
+          <div className="space-y-3">
+            {data.operational_insights.map(({ severity, metric, recommendation }, i) => {
+              const styles = {
+                high: {
+                  card: "bg-red-50 border-red-200 dark:bg-red-950/40 dark:border-red-900",
+                  icon: <AlertTriangle className="w-4 h-4 text-red-500 dark:text-red-400 shrink-0 mt-0.5" />,
+                  metric: "text-red-700 dark:text-red-300",
+                },
+                medium: {
+                  card: "bg-yellow-50 border-yellow-200 dark:bg-yellow-950/40 dark:border-yellow-900",
+                  icon: <AlertCircle className="w-4 h-4 text-yellow-500 dark:text-yellow-400 shrink-0 mt-0.5" />,
+                  metric: "text-yellow-700 dark:text-yellow-300",
+                },
+                low: {
+                  card: "bg-blue-50 border-blue-200 dark:bg-blue-950/40 dark:border-blue-900",
+                  icon: <Info className="w-4 h-4 text-blue-500 dark:text-blue-400 shrink-0 mt-0.5" />,
+                  metric: "text-blue-700 dark:text-blue-300",
+                },
+              }[severity];
+              return (
+                <div key={i} className={`flex gap-3 p-4 rounded-lg border ${styles.card}`}>
+                  {styles.icon}
+                  <div>
+                    <div className={`text-xs font-semibold mb-1 ${styles.metric}`}>{metric}</div>
+                    <div className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{recommendation}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Model note */}
       <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-500 leading-relaxed dark:bg-slate-900/50 dark:border-slate-800 dark:text-slate-500">

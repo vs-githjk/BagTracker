@@ -199,6 +199,86 @@ def get_analytics():
     importances = get_feature_importances()
     sorted_importances = sorted(importances.items(), key=lambda x: -x[1])
 
+    # Risk driver frequency
+    high_bags = [b for b in _scored_bags if b.get("risk_level") == "High"]
+    all_reason_counts: dict[str, int] = {}
+    high_reason_counts: dict[str, int] = {}
+    for bag in _scored_bags:
+        for reason in bag.get("risk_reasons", []):
+            all_reason_counts[reason] = all_reason_counts.get(reason, 0) + 1
+    for bag in high_bags:
+        for reason in bag.get("risk_reasons", []):
+            high_reason_counts[reason] = high_reason_counts.get(reason, 0) + 1
+
+    risk_driver_frequency = sorted([
+        {
+            "label": reason,
+            "count": count,
+            "pct_all": round(count / total * 100, 1),
+            "pct_high": round(high_reason_counts.get(reason, 0) / max(len(high_bags), 1) * 100, 1),
+        }
+        for reason, count in all_reason_counts.items()
+    ], key=lambda x: -x["count"])[:8]
+
+    # Operational insights
+    insights = []
+
+    layover_short_pct = sum(1 for b in _scored_bags if b.get("layover_minutes", 999) < 50) / total * 100
+    if layover_short_pct > 25:
+        insights.append({
+            "severity": "high",
+            "metric": f"{layover_short_pct:.0f}% of bags have layovers under 50 min",
+            "recommendation": "Enforce a minimum 60-min connection time for transfer bookings to significantly reduce missed connections.",
+        })
+
+    delay_pct = sum(1 for b in _scored_bags if b.get("arrival_delay_minutes", 0) > 45) / total * 100
+    if delay_pct > 15:
+        insights.append({
+            "severity": "high",
+            "metric": f"{delay_pct:.0f}% of inbound flights have delays > 45 min",
+            "recommendation": "Trigger pre-alerts to transfer teams when inbound delay exceeds 30 min — early preparation reduces escalations.",
+        })
+
+    buffer_low_pct = sum(1 for b in _scored_bags if b.get("processing_buffer_minutes", 999) < 15) / total * 100
+    if buffer_low_pct > 20:
+        insights.append({
+            "severity": "high",
+            "metric": f"{buffer_low_pct:.0f}% of bags have < 15 min processing buffer",
+            "recommendation": "Optimize BHS sort-to-load pipeline to achieve a 20-min minimum buffer and reduce last-minute manual handling.",
+        })
+
+    customs_pct = sum(1 for b in _scored_bags if b.get("customs_recheck_required")) / total * 100
+    if customs_pct > 10:
+        insights.append({
+            "severity": "medium",
+            "metric": f"{customs_pct:.0f}% of bags require customs re-check",
+            "recommendation": "Expand dedicated customs fast-track lanes for transfer passengers to clear the re-check bottleneck faster.",
+        })
+
+    terminal_pct = sum(1 for b in _scored_bags if b.get("terminal_change")) / total * 100
+    if terminal_pct > 15:
+        insights.append({
+            "severity": "medium",
+            "metric": f"{terminal_pct:.0f}% of transfers require inter-terminal movement",
+            "recommendation": "Review gate assignment strategy to cluster connecting flights in the same terminal where operationally feasible.",
+        })
+
+    avg_congestion = sum(b.get("baggage_system_congestion_score", 0) for b in _scored_bags) / total
+    if avg_congestion > 0.5:
+        insights.append({
+            "severity": "medium",
+            "metric": f"Average BHS congestion at {avg_congestion * 100:.0f}%",
+            "recommendation": "Add transfer belt capacity or adjust peak-hour staffing levels to reduce BHS congestion.",
+        })
+
+    late_pct = sum(1 for b in _scored_bags if b.get("late_checkin_flag")) / total * 100
+    if late_pct > 15:
+        insights.append({
+            "severity": "low",
+            "metric": f"{late_pct:.0f}% of bags flagged for late check-in",
+            "recommendation": "Tighten check-in deadline enforcement and add dedicated staff to expedite late-arriving transfer passengers.",
+        })
+
     return {
         "total_bags": total,
         "high_risk": high,
@@ -211,6 +291,8 @@ def get_analytics():
         "feature_importances": [
             {"feature": k, "importance": v} for k, v in sorted_importances
         ],
+        "risk_driver_frequency": risk_driver_frequency,
+        "operational_insights": insights,
     }
 
 
