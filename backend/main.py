@@ -63,6 +63,15 @@ SIMULATION_STATUSES = [
     "arrived_at_carousel", "in_transfer_system", "sorted", "on_hold", "manual_handling",
 ]
 
+# Rank used to prevent status from regressing to an earlier stage
+STATUS_PROGRESSION = {
+    "arrived_at_carousel": 0,
+    "in_transfer_system": 1,
+    "on_hold": 1,
+    "manual_handling": 1,
+    "sorted": 2,
+}
+
 
 async def _simulation_loop():
     """Mutate bag data every 12 seconds to simulate live airport operations."""
@@ -92,16 +101,27 @@ async def _simulation_loop():
                 delta = random.randint(2, 6)
                 bag["arrival_delay_minutes"] = current_delay + delta
                 bag["layover_minutes"] = max(15, current_layover - delta)
+                # Keep actual_arrival timestamp in sync with the updated delay
+                try:
+                    actual = datetime.fromisoformat(bag["actual_arrival"])
+                    bag["actual_arrival"] = (actual + timedelta(minutes=delta)).isoformat()
+                except Exception:
+                    pass
+                # Processing buffer shrinks as arrival delay grows
+                bag["processing_buffer_minutes"] = max(0, bag.get("processing_buffer_minutes", 0) - delta)
                 mutated = True
 
-            # 40% chance: status progression
+            # 40% chance: status progression — never regress to an earlier stage
             if random.random() < 0.40:
-                bag["current_status"] = random.choice(SIMULATION_STATUSES)
+                current_status = bag.get("current_status", "arrived_at_carousel")
+                current_rank = STATUS_PROGRESSION.get(current_status, 0)
+                candidates = [s for s in SIMULATION_STATUSES if STATUS_PROGRESSION.get(s, 0) >= current_rank]
+                bag["current_status"] = random.choice(candidates)
 
-            # 20% chance: congestion fluctuation
+            # 20% chance: congestion fluctuation (symmetric ±0.1)
             if random.random() < 0.20:
                 bag["baggage_system_congestion_score"] = round(
-                    min(1.0, max(0.0, bag.get("baggage_system_congestion_score", 0.3) + random.uniform(-0.1, 0.15))),
+                    min(1.0, max(0.0, bag.get("baggage_system_congestion_score", 0.3) + random.uniform(-0.1, 0.1))),
                     3,
                 )
                 mutated = True
@@ -166,7 +186,17 @@ def get_bags(
         pass
 
     total = len(bags)
-    return {"total": total, "bags": bags[offset: offset + limit]}
+    fleet_high = sum(1 for b in _scored_bags if b.get("risk_level") == "High")
+    fleet_medium = sum(1 for b in _scored_bags if b.get("risk_level") == "Medium")
+    fleet_low = sum(1 for b in _scored_bags if b.get("risk_level") == "Low")
+    return {
+        "total": total,
+        "fleet_total": len(_scored_bags),
+        "fleet_high": fleet_high,
+        "fleet_medium": fleet_medium,
+        "fleet_low": fleet_low,
+        "bags": bags[offset: offset + limit],
+    }
 
 
 @app.get("/bags/{bag_id}")

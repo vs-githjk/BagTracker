@@ -19,7 +19,7 @@ export async function fetchBags(params?: {
   search?: string;
   sort_by?: string;
   sort_dir?: string;
-}): Promise<{ total: number; bags: Bag[] }> {
+}): Promise<{ total: number; fleet_total: number; fleet_high: number; fleet_medium: number; fleet_low: number; bags: Bag[] }> {
   const q = new URLSearchParams();
   if (params?.risk_level) q.set("risk_level", params.risk_level);
   if (params?.search) q.set("search", params.search);

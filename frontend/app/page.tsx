@@ -22,6 +22,7 @@ const SORT_FIELDS = [
 export default function DashboardPage() {
   const [bags, setBags] = useState<Bag[]>([]);
   const [total, setTotal] = useState(0);
+  const [fleetCounts, setFleetCounts] = useState({ total: 0, high: 0, med: 0, low: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -72,6 +73,7 @@ export default function DashboardPage() {
       });
       setBags(data.bags);
       setTotal(data.total);
+      setFleetCounts({ total: data.fleet_total, high: data.fleet_high, med: data.fleet_medium, low: data.fleet_low });
     } catch {
       setError("Failed to load bags. Is the backend running on port 8000?");
     } finally {
@@ -131,10 +133,6 @@ export default function DashboardPage() {
     a.click();
   };
 
-  const high = bags.filter((b) => b.risk_level === "High").length;
-  const med = bags.filter((b) => b.risk_level === "Medium").length;
-  const low = bags.filter((b) => b.risk_level === "Low").length;
-
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -181,10 +179,10 @@ export default function DashboardPage() {
       {/* Summary cards */}
       <div className="grid grid-cols-4 gap-4">
         {[
-          { label: "Total Bags", value: total, icon: Clock, colorClass: "text-slate-500 dark:text-slate-400", bgClass: "bg-white border-slate-200 shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:shadow-none" },
-          { label: "High Risk", value: high, icon: AlertTriangle, colorClass: "text-red-500 dark:text-red-400", bgClass: "bg-red-50 border-red-200 shadow-sm dark:bg-red-950/50 dark:border-red-900 dark:shadow-none" },
-          { label: "Medium Risk", value: med, icon: AlertTriangle, colorClass: "text-yellow-500 dark:text-yellow-400", bgClass: "bg-yellow-50 border-yellow-200 shadow-sm dark:bg-yellow-950/50 dark:border-yellow-900 dark:shadow-none" },
-          { label: "Low Risk", value: low, icon: CheckCircle, colorClass: "text-emerald-500 dark:text-emerald-400", bgClass: "bg-emerald-50 border-emerald-200 shadow-sm dark:bg-emerald-950/50 dark:border-emerald-900 dark:shadow-none" },
+          { label: "Total Bags", value: fleetCounts.total, icon: Clock, colorClass: "text-slate-500 dark:text-slate-400", bgClass: "bg-white border-slate-200 shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:shadow-none" },
+          { label: "High Risk", value: fleetCounts.high, icon: AlertTriangle, colorClass: "text-red-500 dark:text-red-400", bgClass: "bg-red-50 border-red-200 shadow-sm dark:bg-red-950/50 dark:border-red-900 dark:shadow-none" },
+          { label: "Medium Risk", value: fleetCounts.med, icon: AlertTriangle, colorClass: "text-yellow-500 dark:text-yellow-400", bgClass: "bg-yellow-50 border-yellow-200 shadow-sm dark:bg-yellow-950/50 dark:border-yellow-900 dark:shadow-none" },
+          { label: "Low Risk", value: fleetCounts.low, icon: CheckCircle, colorClass: "text-emerald-500 dark:text-emerald-400", bgClass: "bg-emerald-50 border-emerald-200 shadow-sm dark:bg-emerald-950/50 dark:border-emerald-900 dark:shadow-none" },
         ].map(({ label, value, icon: Icon, colorClass, bgClass }) => (
           <div key={label} className={`rounded-xl border p-4 ${bgClass}`}>
             <div className="flex items-center justify-between">
